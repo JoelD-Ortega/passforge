@@ -1,0 +1,37 @@
+{PROJECT_NAME} - Random password and passphrase generator
+
+Usage:
+  {PROJECT_NAME} --analyze <PASSWORD>
+  {PROJECT_NAME} --generate-password <LENGTH>    Generate a secure random password with uppercase, lowercase, digits and printable ASCII symbols
+  {PROJECT_NAME} --generate-passphrase <WORDS>   Generate a passphrase using the EFF large wordlist (number of words: positive integer)
+  {PROJECT_NAME} --help, -h                      Display this help message 
+  {PROJECT_NAME} --version, -V                   Show version information
+
+Options:
+  -h, --help                   Show this help
+  -V, --version                Show version
+  -a, --analyze                Analyze password entropy and composition
+  -g, --generate-password      Generate a random password
+  -p, --generate-passphrase    Generate a passphrase from EFF wordlist
+
+Commands (mutually exclusive):
+  analyze                Analyze a password
+  generate-password      Generate a random password
+  generate-passphrase    Generate a passphrase
+
+Examples:
+  {PROJECT_NAME} --analyze "MyP@ssw0rd"
+  {PROJECT_NAME} -g 16
+  {PROJECT_NAME} --generate-passphrase 6
+  {PROJECT_NAME} -p 4
+
+Output details:
+  --analyze:
+    - Estimated entropy in bits 
+    - Warnings if missing: uppercase, lowercase, digits, or symbols
+
+  --generate-passphrase:
+    - Words are separated by spaces
+    - Uses EFF large wordlist (https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt)
+
+For more information, visit: https://{PROJECT_URL}
