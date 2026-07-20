@@ -143,6 +143,12 @@ fn parse_command_generate_password<'a>(args:&'a[String])->Result<Command<'a>,Err
                     .map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN,MAX_PASSWORD_LEN))?;
                 parsed_password_len = true;
             }
+            s if s.starts_with("--length=") || s.starts_with("-l=") => {
+                let len = arg.split("=").nth(1).unwrap();
+                password_len = parse_num(len,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN)
+                    .map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN,MAX_PASSWORD_LEN))?;
+                parsed_password_len = true;
+            }
             "--repetitions" | "-r" => {reps = true;}
             _ =>{
                 if parsed_password_len{
@@ -179,6 +185,12 @@ fn parse_command_generate_passphrase<'a>(args:&'a[String])->Result<Command<'a>,E
             "--length" | "-l" => {
                 let temp_len = iter.next().ok_or(Error::NoPassphraseLen).unwrap();
                 passphrase_len = parse_num(temp_len,MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN)
+                    .map_err(|_| Error::InvalidPassphraseLen(MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN))?;
+                parsed_len = true;
+            }
+            s if s.starts_with("--length=") || s.starts_with("-l=") => {
+                let len = s.split("=").nth(1).unwrap();
+                passphrase_len = parse_num(len,MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN)
                     .map_err(|_| Error::InvalidPassphraseLen(MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN))?;
                 parsed_len = true;
             }
