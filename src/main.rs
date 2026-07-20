@@ -17,23 +17,37 @@ fn run()->Result<(),Error<'static>>{
         Err(error)=>{
             eprintln!("{}",error);
         }
-        Ok(command)=>{
-            match command{
-                Command::Analyze(command)=>{
-                    cmd_analyze(command.password)?;
-                }
-                Command::GeneratePassword(command)=>{
-                    cmd_generate_password(command.len,command.digits,command.lowercase,command.uppercase,command.symbols,command.charset_size,command.reps)?;
-                }
-                Command::GeneratePassphrase(command)=>{
-                    cmd_generate_passphrase(command.len)?;
-                }
-                Command::Help=>{
-                    cmd_help();
-                }
-                Command::Version=>{
-                    cmd_version();
-                }
+        Ok(command) => match command {
+            Command::Analyze{password} => {
+                cmd_analyze(password)?;
+            }
+            Command::GeneratePassword{
+                len,
+                charset_size,
+                digits,
+                lowercase,
+                uppercase,
+                symbols,
+                reps,
+            } => {
+                cmd_generate_password(
+                    len,
+                    digits,
+                    lowercase,
+                    uppercase,
+                    symbols,
+                    charset_size,
+                    reps,
+                )?;
+            }
+            Command::GeneratePassphrase{len} => {
+                cmd_generate_passphrase(len)?;
+            }
+            Command::Help => {
+                cmd_help();
+            }
+            Command::Version => {
+                cmd_version();
             }
         }
     }

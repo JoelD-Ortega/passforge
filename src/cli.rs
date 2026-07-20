@@ -17,43 +17,10 @@ const MIN_PASSPHRASE_LEN:usize = 1;
 const MAX_PASSPHRASE_LEN:usize = 48;
 const DEFAULT_PASSPHRASE_LEN:usize = 6;
 
-/*
-struct Opt{
-    name:&'static str,
-    description:&'static str,
-}
-
-const OPTIONS: &[OPT]=&[
-    Opt{ name:"--analyze", description:""},
-    Opt{ name:"--generate-password", description:""},
-    Opt{ name:"--generate-passphrase", description:""},
-    Opt{ name:"--help", description:""},
-    Opt{ name:"--version", description:""},
-];
-*/
-
-pub struct GeneratePasswordCommand{
-    pub len:usize,
-    pub digits:bool,
-    pub lowercase:bool,
-    pub uppercase:bool,
-    pub symbols:bool,
-    pub charset_size:usize,
-    pub reps:bool,
-}
-
-pub struct AnalyzeCommand<'a>{
-    pub password:&'a str,
-}
-
-pub struct GeneratePassphraseCommand{
-    pub len:usize,
-}
-
-pub enum Command<'a>{
-    Analyze(AnalyzeCommand<'a>),
-    GeneratePassword(GeneratePasswordCommand),
-    GeneratePassphrase(GeneratePassphraseCommand),
+pub enum Command<'a> {
+    Analyze{password:&'a str},
+    GeneratePassword{len: usize, charset_size: usize, digits: bool, lowercase: bool, uppercase: bool, symbols: bool, reps: bool},
+    GeneratePassphrase{len: usize},
     Help,
     Version,
 }
@@ -99,7 +66,7 @@ fn parse_command_analyze<'a>(args:&'a[String])->Result<Command<'a>,Error<'a>>{
             }
         }
     }
-    Ok(Command::Analyze(AnalyzeCommand{password}))
+    Ok(Command::Analyze{password})
 }
 
 fn parse_command_generate_password<'a>(args:&'a[String])->Result<Command<'a>,Error<'a>>{
@@ -168,7 +135,7 @@ fn parse_command_generate_password<'a>(args:&'a[String])->Result<Command<'a>,Err
     if charset_size < password_len && !reps{
         return Err(Error::MaximumPossibleLenExceeded(password_len,charset_size));
     }
-    Ok(Command::GeneratePassword(GeneratePasswordCommand{len:password_len,digits,lowercase,uppercase,symbols,charset_size,reps}))
+    Ok(Command::GeneratePassword{len: password_len,charset_size,digits,lowercase,uppercase,symbols,reps})
 }
 
 fn parse_command_generate_passphrase<'a>(args:&'a[String])->Result<Command<'a>,Error<'a>>{
@@ -206,7 +173,7 @@ fn parse_command_generate_passphrase<'a>(args:&'a[String])->Result<Command<'a>,E
             }
         }
     }
-    Ok(Command::GeneratePassphrase(GeneratePassphraseCommand{len:passphrase_len}))
+    Ok(Command::GeneratePassphrase{len:passphrase_len})
 }
 
 pub fn parse<'a>(args:&'a[String])->Result<Command<'a>,Error<'a>>{
