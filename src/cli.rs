@@ -13,6 +13,7 @@ use crate::random::SYMBOLS_SET_SIZE;
 const MIN_PASSWORD_LEN:usize = 4;
 const MAX_PASSWORD_LEN:usize = 1024;
 const DEFAULT_PASSWORD_LEN:usize = 16;
+const MIN_PASSPHRASE_LEN:usize = 1;
 const MAX_PASSPHRASE_LEN:usize = 48;
 const DEFAULT_PASSPHRASE_LEN:usize = 6;
 
@@ -138,7 +139,8 @@ fn parse_command_generate_password<'a>(args:&'a[String])->Result<Command<'a>,Err
             }
             "--length" | "-l" =>{
                 let temp_len:&str = iter.next().ok_or(Error::NoPasswordLen).unwrap();
-                password_len = parse_num(temp_len,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN).map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN,MAX_PASSWORD_LEN))?;
+                password_len = parse_num(temp_len,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN)
+                    .map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN,MAX_PASSWORD_LEN))?;
                 parsed_password_len = true;
             }
             "--repetitions" | "-r" => {reps = true;}
@@ -147,7 +149,8 @@ fn parse_command_generate_password<'a>(args:&'a[String])->Result<Command<'a>,Err
                     return Err(Error::UnknownCommand(arg));
                 }
                 else{
-                    password_len = parse_num(arg,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN).map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN,MAX_PASSWORD_LEN))?;
+                    password_len = parse_num(arg,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN)
+                        .map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN,MAX_PASSWORD_LEN))?;
                     parsed_password_len = true;
                 }
             }
@@ -175,7 +178,8 @@ fn parse_command_generate_passphrase<'a>(args:&'a[String])->Result<Command<'a>,E
             }
             "--length" | "-l" => {
                 let temp_len = iter.next().ok_or(Error::NoPassphraseLen).unwrap();
-                passphrase_len = parse_num(temp_len,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN).map_err(|_| Error::InvalidPassphraseLen(1,MAX_PASSPHRASE_LEN))?;
+                passphrase_len = parse_num(temp_len,MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN)
+                    .map_err(|_| Error::InvalidPassphraseLen(MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN))?;
                 parsed_len = true;
             }
             _ => {
@@ -183,7 +187,8 @@ fn parse_command_generate_passphrase<'a>(args:&'a[String])->Result<Command<'a>,E
                     return Err(Error::UnknownCommand(arg));
                 }
                 else{
-                    passphrase_len = parse_num(arg,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN).map_err(|_| Error::InvalidPassphraseLen(1,MAX_PASSPHRASE_LEN))?;
+                    passphrase_len = parse_num(arg,MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN)
+                        .map_err(|_| Error::InvalidPassphraseLen(MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN))?;
                     parsed_len = true;
                 }
             }
