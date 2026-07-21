@@ -1,27 +1,27 @@
-mod error;
 mod cli;
+mod error;
 mod random;
 
-use error::Error;
-use cli::parse;
 use cli::Command;
 use cli::cmd_analyze;
-use cli::cmd_generate_password;
 use cli::cmd_generate_passphrase;
+use cli::cmd_generate_password;
 use cli::cmd_help;
 use cli::cmd_version;
+use cli::parse;
+use error::Error;
 
-fn run()->Result<(),Error<'static>>{
-    let args:Vec<String> = std::env::args().collect();
-    match parse(&args){
-        Err(error)=>{
-            eprintln!("{}",error);
+fn run() -> Result<(), Error<'static>> {
+    let args: Vec<String> = std::env::args().collect();
+    match parse(&args) {
+        Err(error) => {
+            eprintln!("{}", error);
         }
         Ok(command) => match command {
-            Command::Analyze{password} => {
+            Command::Analyze { password } => {
                 cmd_analyze(password)?;
             }
-            Command::GeneratePassword{
+            Command::GeneratePassword {
                 len,
                 charset_size,
                 digits,
@@ -40,7 +40,7 @@ fn run()->Result<(),Error<'static>>{
                     reps,
                 )?;
             }
-            Command::GeneratePassphrase{len} => {
+            Command::GeneratePassphrase { len } => {
                 cmd_generate_passphrase(len)?;
             }
             Command::Help => {
@@ -49,13 +49,13 @@ fn run()->Result<(),Error<'static>>{
             Command::Version => {
                 cmd_version();
             }
-        }
+        },
     }
     Ok(())
 }
 
-fn main(){
-    if let Err(error) = run(){
-        eprintln!("{}",error);
+fn main() {
+    if let Err(error) = run() {
+        eprintln!("{}", error);
     }
 }
