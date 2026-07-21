@@ -28,7 +28,7 @@ pub enum Command<'a> {
 fn parse_num(num:&str,min:usize,max:usize)->Result<usize,InternalError>{
     let mut digits:usize = 0;
     for &byte in num.as_bytes(){
-        if byte < b'0' || byte > b'9'{
+        if !byte.is_ascii_digit(){
            return Err(InternalError::ParseError);
         }
         else if byte != b'0'{
@@ -57,8 +57,11 @@ fn parse_command_analyze<'a>(args:&'a[String])->Result<Command<'a>,Error<'a>>{
                 password = iter.next().ok_or(Error::NoPassword).unwrap();
                 parsed_password = true;
             }
+            s if s.starts_with("--") || s.starts_with("-") => {
+                return Err(Error::UnknownFlag(arg));
+            }
             _=>{
-                if parsed_password{ return Err(Error::UnknownCommand(arg));}
+                if parsed_password{ return Err(Error::UnexpectedArg(arg));}
                 else{
                     password = arg;
                     parsed_password = true;
@@ -104,6 +107,7 @@ fn parse_command_generate_password<'a>(args:&'a[String])->Result<Command<'a>,Err
                 symbols = false;
                 charset_size = DIGITS_SET_SIZE;
             }
+            "--repetitions" | "-r" => {reps = true;}
             "--length" | "-l" =>{
                 let temp_len:&str = iter.next().ok_or(Error::NoPasswordLen).unwrap();
                 password_len = parse_num(temp_len,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN)
@@ -116,10 +120,12 @@ fn parse_command_generate_password<'a>(args:&'a[String])->Result<Command<'a>,Err
                     .map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN,MAX_PASSWORD_LEN))?;
                 parsed_password_len = true;
             }
-            "--repetitions" | "-r" => {reps = true;}
+            s if s.starts_with("--") || s.starts_with("-") => {
+                return Err(Error::UnknownFlag(arg));
+            }
             _ =>{
                 if parsed_password_len{
-                    return Err(Error::UnknownCommand(arg));
+                    return Err(Error::UnexpectedArg(arg));
                 }
                 else{
                     password_len = parse_num(arg,MIN_PASSWORD_LEN,MAX_PASSWORD_LEN)
@@ -161,9 +167,12 @@ fn parse_command_generate_passphrase<'a>(args:&'a[String])->Result<Command<'a>,E
                     .map_err(|_| Error::InvalidPassphraseLen(MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN))?;
                 parsed_len = true;
             }
+            s if s.starts_with("--") || s.starts_with("-") => {
+                return Err(Error::UnknownFlag(arg));
+            }
             _ => {
                 if parsed_len{
-                    return Err(Error::UnknownCommand(arg));
+                    return Err(Error::UnexpectedArg(arg));
                 }
                 else{
                     passphrase_len = parse_num(arg,MIN_PASSPHRASE_LEN,MAX_PASSPHRASE_LEN)
@@ -190,7 +199,7 @@ pub fn parse<'a>(args:&'a[String])->Result<Command<'a>,Error<'a>>{
             Ok(parse_command_generate_passphrase(&args[2..])?)
         }
         
-        "--help" | "help" | "h"=>{
+        "--help" | "help" | "-h"=>{
             Ok(Command::Help)
         }
 

@@ -5,8 +5,14 @@ pub enum Error<'a>{
     #[error("Error: Entropy OS Failure.")]
     OsFailure(#[from] getrandom::Error),
 
-    #[error("Error: Unknown option '{0}'. Use --help for usage.")]
+    #[error("Error: Unknown command '{0}'. Use --help for usage.")]
     UnknownCommand(&'a str),
+
+    #[error("Error: Unknown flag '{0}'. Use --help for usage.")]
+    UnknownFlag(&'a str),
+
+    #[error("Error: Unexpected positional argument '{0}'. Use --help for usage.")]
+    UnexpectedArg(&'a str),
 
     #[error("Error: Missing password for analyze. Usage: passforge analyze <PASSWORD>")]
     NoPassword,
