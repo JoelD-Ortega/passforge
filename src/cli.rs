@@ -186,6 +186,9 @@ fn parse_command_generate_passphrase<'a>(args:&'a[String])->Result<Command<'a>,E
 }
 
 pub fn parse<'a>(args:&'a[String])->Result<Command<'a>,Error<'a>>{
+    if args.len() == 1{
+        return Ok(Command::Help);
+    }
     match args[1].as_str(){
         "analyze"=>{
             Ok(parse_command_analyze(&args[2..])?)
