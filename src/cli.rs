@@ -32,6 +32,7 @@ pub enum Command<'a> {
     },
     GeneratePassphrase {
         len: usize,
+        separator: &'a str,
     },
     Help,
     Version,
@@ -181,13 +182,16 @@ fn parse_command_generate_password<'a>(args: &'a [String]) -> Result<Command<'a>
 
 fn parse_command_generate_passphrase<'a>(args: &'a [String]) -> Result<Command<'a>, Error<'a>> {
     let mut passphrase_len: usize = DEFAULT_PASSPHRASE_LEN;
-    let mut _separator: u8 = b' ';
+    let mut separator:&'a str = " ";
     let mut parsed_len: bool = false;
     let mut iter = args.iter();
     while let Some(arg) = iter.next() {
         match arg.as_str() {
             "--separator" | "-s" => {
-                //separator = iter.next().ok_or(Error::NoCharacterSetEnabled)?
+                separator = iter.next().ok_or(Error::NoPassphraseSeparator)?;
+            }
+            s if s.starts_with("--separator=") || s.starts_with("-s=") => {
+                separator = s.split("=").nth(1).ok_or(Error::NoPassphraseSeparator)?;
             }
             "--length" | "-l" => {
                 let temp_len = iter.next().ok_or(Error::NoPassphraseLen).unwrap();
@@ -223,6 +227,7 @@ fn parse_command_generate_passphrase<'a>(args: &'a [String]) -> Result<Command<'
     }
     Ok(Command::GeneratePassphrase {
         len: passphrase_len,
+        separator,
     })
 }
 
@@ -310,10 +315,10 @@ pub fn cmd_generate_password(
 }
 
 #[inline]
-pub fn cmd_generate_passphrase(passphrase_len: usize) -> Result<(), Error<'static>> {
+pub fn cmd_generate_passphrase<'a>(passphrase_len: usize, separator:&'a str) -> Result<(), Error<'static>> {
     let mut wordlist: Vec<&str> = vec![""; passphrase_len];
     get_random_passphrase(&mut wordlist)?;
-    println!("{}", wordlist.join(" "));
+    println!("{}", wordlist.join(separator));
     Ok(())
 }
 

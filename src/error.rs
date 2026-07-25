@@ -38,6 +38,9 @@ pub enum Error<'a> {
     )]
     NoPassphraseLen,
 
+    #[error("Error: Unspecified separator for generate-passphrase.")]
+    NoPassphraseSeparator,
+
     #[error("Error: Number of words must be a positive integer betwen {0} and {1} inclusive.")]
     InvalidPassphraseLen(usize, usize),
 

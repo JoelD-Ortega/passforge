@@ -40,8 +40,8 @@ fn run() -> Result<(), Error<'static>> {
                     reps,
                 )?;
             }
-            Command::GeneratePassphrase { len } => {
-                cmd_generate_passphrase(len)?;
+            Command::GeneratePassphrase { len, separator } => {
+                cmd_generate_passphrase(len, separator)?;
             }
             Command::Help => {
                 cmd_help();
