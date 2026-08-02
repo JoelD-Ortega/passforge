@@ -133,16 +133,51 @@ fn parse_command_generate_password<'a>(args: &'a [String]) -> Result<Command<'a>
                 reps = true;
             }
             "--length" | "-l" => {
-                let temp_len: &str = iter.next().ok_or(Error::NoPasswordLen).unwrap();
+                let temp_len: &str = iter.next().ok_or(Error::UnspecifiedVal(arg))?;
                 password_len = parse_num(temp_len, MIN_PASSWORD_LEN, MAX_PASSWORD_LEN)
                     .map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN, MAX_PASSWORD_LEN))?;
                 parsed_password_len = true;
             }
-            s if s.starts_with("--length=") || s.starts_with("-l=") => {
-                let len = arg.split("=").nth(1).unwrap();
-                password_len = parse_num(len, MIN_PASSWORD_LEN, MAX_PASSWORD_LEN)
-                    .map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN, MAX_PASSWORD_LEN))?;
+            s if s.starts_with("--") || s.starts_with("-") && s.contains("=") => {
+                let (flag, value): (&str, &str) = s.split_once("=").unwrap();
+                if flag != "--repetitions"
+                    && flag != "-r"
+                    && flag != "--no-digits"
+                    && flag != "-D"
+                    && flag != "--no-lowercase"
+                    && flag != "-L"
+                    && flag != "--no-uppercase"
+                    && flag != "-U"
+                    && flag != "--no-symbols"
+                    && flag != "-S"
+                    && flag != "--pin"
+                    && flag != "-p"
+                    && flag != "--length"
+                    && flag != "-l"
+                {
+                    return Err(Error::UnknownFlag(flag));
+                }
+                if flag == "--repetitions"
+                    || flag == "-r"
+                    || flag == "--no-digits"
+                    || flag == "-D"
+                    || flag == "--no-lowercase"
+                    || flag == "-L"
+                    || flag == "--no-uppercase"
+                    || flag == "-U"
+                    || flag == "--no-symbols"
+                    || flag == "-S"
+                    || flag == "--pin"
+                    || flag == "-p"
+                {
+                    return Err(Error::CannotTakeVal(flag));
+                }
+                if value.is_empty() {
+                    return Err(Error::UnspecifiedVal(flag));
+                }
                 parsed_password_len = true;
+                password_len = parse_num(value, MIN_PASSWORD_LEN, MAX_PASSWORD_LEN)
+                    .map_err(|_| Error::InvalidPasswordLen(MIN_PASSWORD_LEN, MAX_PASSWORD_LEN))?;
             }
             s if s.starts_with("--") || s.starts_with("-") => {
                 return Err(Error::UnknownFlag(arg));
@@ -182,7 +217,7 @@ fn parse_command_generate_password<'a>(args: &'a [String]) -> Result<Command<'a>
 
 fn parse_command_generate_passphrase<'a>(args: &'a [String]) -> Result<Command<'a>, Error<'a>> {
     let mut passphrase_len: usize = DEFAULT_PASSPHRASE_LEN;
-    let mut separator:&'a str = " ";
+    let mut separator: &str = " ";
     let mut parsed_len: bool = false;
     let mut iter = args.iter();
     while let Some(arg) = iter.next() {
@@ -190,24 +225,31 @@ fn parse_command_generate_passphrase<'a>(args: &'a [String]) -> Result<Command<'
             "--separator" | "-s" => {
                 separator = iter.next().ok_or(Error::NoPassphraseSeparator)?;
             }
-            s if s.starts_with("--separator=") || s.starts_with("-s=") => {
-                separator = s.split("=").nth(1).ok_or(Error::NoPassphraseSeparator)?;
-            }
             "--length" | "-l" => {
-                let temp_len = iter.next().ok_or(Error::NoPassphraseLen).unwrap();
+                let temp_len: &str = iter.next().ok_or(Error::NoPassphraseLen)?;
                 passphrase_len = parse_num(temp_len, MIN_PASSPHRASE_LEN, MAX_PASSPHRASE_LEN)
                     .map_err(|_| {
                         Error::InvalidPassphraseLen(MIN_PASSPHRASE_LEN, MAX_PASSPHRASE_LEN)
                     })?;
                 parsed_len = true;
             }
-            s if s.starts_with("--length=") || s.starts_with("-l=") => {
-                let len = s.split("=").nth(1).unwrap();
-                passphrase_len =
-                    parse_num(len, MIN_PASSPHRASE_LEN, MAX_PASSPHRASE_LEN).map_err(|_| {
-                        Error::InvalidPassphraseLen(MIN_PASSPHRASE_LEN, MAX_PASSPHRASE_LEN)
-                    })?;
-                parsed_len = true;
+            s if s.starts_with("--") || s.starts_with("-") && s.contains("=") => {
+                let (flag, value): (&str, &str) = s.split_once("=").unwrap();
+                if flag != "--separator" && flag != "-s" && flag != "--length" && flag != "-l" {
+                    return Err(Error::UnknownFlag(flag));
+                }
+                if value.is_empty() {
+                    return Err(Error::UnspecifiedVal(flag));
+                }
+                if flag == "--separator" || flag == "-s" {
+                    separator = value;
+                } else {
+                    passphrase_len = parse_num(value, MIN_PASSPHRASE_LEN, MAX_PASSPHRASE_LEN)
+                        .map_err(|_| {
+                            Error::InvalidPassphraseLen(MIN_PASSPHRASE_LEN, MAX_PASSPHRASE_LEN)
+                        })?;
+                    parsed_len = true;
+                }
             }
             s if s.starts_with("--") || s.starts_with("-") => {
                 return Err(Error::UnknownFlag(arg));
@@ -315,7 +357,10 @@ pub fn cmd_generate_password(
 }
 
 #[inline]
-pub fn cmd_generate_passphrase<'a>(passphrase_len: usize, separator:&'a str) -> Result<(), Error<'static>> {
+pub fn cmd_generate_passphrase(
+    passphrase_len: usize,
+    separator: &str,
+) -> Result<(), Error<'static>> {
     let mut wordlist: Vec<&str> = vec![""; passphrase_len];
     get_random_passphrase(&mut wordlist)?;
     println!("{}", wordlist.join(separator));

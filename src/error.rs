@@ -17,10 +17,11 @@ pub enum Error<'a> {
     #[error("Error: Missing password for analyze. Usage: passforge analyze <PASSWORD>")]
     NoPassword,
 
-    #[error(
-        "Error: Missing password length for generate_password. Usage: passforge generate_password <LENGTH>"
-    )]
-    NoPasswordLen,
+    #[error("Error: Unspecified value for {0} flag.")]
+    UnspecifiedVal(&'a str),
+
+    #[error("Error: Boolean flag {0} cannot take a value.")]
+    CannotTakeVal(&'a str),
 
     #[error("Error: Length must be between {0} and {1} inclusive.")]
     InvalidPasswordLen(usize, usize),
