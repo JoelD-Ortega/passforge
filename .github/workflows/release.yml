@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate automatic changelog
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          output-file: "false"
+          skip-version-file: true
+          skip-commit: true
+          skip-tag: true
+
+      - name: Create release
+        id: release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            asset_suffix: linux-x86_64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            asset_suffix: macos-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            asset_suffix: windows-x86_64.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get package name from Cargo.toml
+        id: get_package_name
+        run: |
+          BIN_NAME=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].name')
+          echo "bin_name=$BIN_NAME" >> $GITHUB_OUTPUT
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Cache Cargo dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Rename binary for upload
+        shell: bash
+        run: |
+          BIN_NAME="${{ steps.get_package_name.outputs.bin_name }}"
+          BIN_PATH="target/${{ matrix.target }}/release/${BIN_NAME}"
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            BIN_PATH="${BIN_PATH}.exe"
+          fi
+          ASSET_NAME="${BIN_NAME}-${{ matrix.asset_suffix }}"
+          cp "$BIN_PATH" "$ASSET_NAME"
+          echo "asset_name=$ASSET_NAME" >> $GITHUB_OUTPUT
+        id: rename
+
+      - name: Upload binary to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            ${{ steps.rename.outputs.asset_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
