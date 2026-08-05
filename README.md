@@ -67,7 +67,8 @@ passforge <COMMAND> [OPTIONS] [ARGUMENTS]
 
 ### Passphrase Generation Options (for `generate-passphrase`)
 
-- `-w, --words <N>`: Number of words (default: 6). This can also be provided as a positional argument.
+- `-l, --length <N>`: Number of words (default: 6). This can also be provided as a positional argument.
+- `-s, --separator <S>`: Separator between words (default: whitespace).
 
 ### Examples
 
